@@ -12,7 +12,7 @@ const business = {
   rating: 4.5,
   reviewCount: 90
 }
-
+// Test GitHub: try to push branch to GitHub
 class Business extends React.Component {
     render() {
         return (
