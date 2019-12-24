@@ -1,7 +1,6 @@
 import React from 'react';
 import './SearchBar.css';
-
-
+import Autocomplete from 'react-google-autocomplete';
 
 class SearchBar extends React.Component {
     constructor(props) {
@@ -16,16 +15,18 @@ class SearchBar extends React.Component {
         this.handleLocationChange = this.handleLocationChange.bind(this);
         this.handleTermChange = this.handleTermChange.bind(this);
         this.handleSeach = this.handleSeach.bind(this);
+        this.handleEnter = this.handleEnter.bind(this);
+        this.handlePlaceSelected = this.handlePlaceSelected.bind(this);
 
         this.sortByOptions = {                             // keys is returned event object of event handler
             'Best Match' : 'best_match',
             'Highest Rate' : 'rating',
-            'Most Reviewed' : 'review_count'
+            'Most Reviewed' : 'review_count',
+            'Nearest To Farest' : 'distance'
         }
     }
 
     //handle sorting By Change
-
     getSortByClass(sortByOption) {
         if (this.state.sortBy === sortByOption) {
             return 'active';
@@ -33,13 +34,21 @@ class SearchBar extends React.Component {
         return '';
     }
 
-    handleSortByChange(sortByOption) {                      // using returned event object to update state sortBy
+    handleSortByChange(sortByOption) {             // using returned event object to update state sortBy
         this.setState({
             sortBy : sortByOption,
         })
     }
-
-    //handle Terms(Business) change
+    
+    // this method will get called before component is rendered from 2nd time
+    // and run searchYelp only when there is update in state and state.location & term != ''
+    UNSAFE_componentWillUpdate(nextProps, nextState) {
+        if(this.state.sortBy !== nextState.sortBy && this.state.location !== '' && this.state.term !== ''){
+            this.props.searchYelp(nextState.term, nextState.location, nextState.sortBy);
+        } else {
+            return true;
+        }
+    }
 
     handleTermChange(event) {
         this.setState({
@@ -50,6 +59,7 @@ class SearchBar extends React.Component {
     //handle Location change
  
     handleLocationChange(event) {
+        // console.log(event);
         this.setState({
             location: event.target.value,
         })
@@ -60,6 +70,17 @@ class SearchBar extends React.Component {
         event.preventDefault();
     }
 
+    handlePlaceSelected(place) {
+        this.setState({
+            location: place.formatted_address,
+        })
+    }
+
+    handleEnter(e) {
+        if(e.key === 'Enter'){
+            this.props.searchYelp(this.state.term, this.state.location, this.state.sortBy);
+        }
+    }
     //render
 
     renderSortByOptions() {
@@ -77,11 +98,22 @@ class SearchBar extends React.Component {
                     </ul>
                 </div>
                 <div className="SearchBar-fields">
-                    <input placeholder="Search Businesses" onChange={this.handleTermChange}/>
-                    <input placeholder="Where?" onChange={this.handleLocationChange}/>
+                    <input placeholder="Search Businesses" onChange={this.handleTermChange} onKeyPress={this.handleEnter}/>
+                    {/* <input placeholder="Where?" onChange={this.handleLocationChange} onKeyPress={this.handleEnter}/> */}
+                    <Autocomplete 
+                        onChange={this.handleLocationChange} 
+                        onPlaceSelected={this.handlePlaceSelected} 
+                        style={{width: '25%'}}                       
+                        // onPlaceSelected={(place) => {
+                        //     console.log(place);
+                        // }}
+                        types={['(cities)']}
+                        
+                        // componentRestrictions={{country: "us"}}
+                    />
                 </div>
                 <div className="SearchBar-submit" onClick={this.handleSeach}>
-                    <a href="">Let's Go</a>
+                    <a href="/#">Let's Go</a>
                 </div>
             </div>
         )
